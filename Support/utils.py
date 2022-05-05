@@ -1,4 +1,9 @@
+#!/usr/bin/env python3
+
 import datetime
+
+def log(msg):
+    print(str(datetime.datetime.now(tz=EST5EDT()).date()) + " " + str(datetime.datetime.now(tz=EST5EDT()).time()) + ": " + msg)
 
 def isTradeTime(begin_time, end_time):
     # If check time is not given, default to current UTC time
