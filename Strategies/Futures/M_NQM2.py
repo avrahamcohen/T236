@@ -42,7 +42,11 @@ def startStrategy(IBClient):
             time.sleep(1)
 
 def calculateHeikinAshi(marketData, DEBUG=False):
+    haOpen = 0
+    haClose = 0
+
     HAData = []
+    
     for i in range(0, len(marketData)):
         if i == 0:
             haOpen = (marketData[i]["Open"])
@@ -51,8 +55,9 @@ def calculateHeikinAshi(marketData, DEBUG=False):
 
         haClose = (marketData[i]["Open"] + marketData[i]["High"] + marketData[i]["Low"] + marketData[i]["Close"]) / 4
         HAData.append({"HAOpen": haOpen, "HAClose": haClose})
+        
         if DEBUG:
-            log(marketData[i]["Date"] + " HAOpen: " + str(haOpen, 2) + " HAClose: " + str(haClose, 2))
+            log(marketData[i]["Date"] + " HAOpen: " + str(haOpen) + " HAClose: " + str(haClose))
 
     return HAData
 
