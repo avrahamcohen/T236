@@ -8,7 +8,7 @@ from Brokers.InteractiveBrokers.marketOrders import *
 currentHour = -1
 currentMinute = -1
 
-fourHoursBarSizeMarketDataAnalysisResult = "Short"
+fourHoursBarSizeMarketDataAnalysisResult = "Long"
 thirtyMinutesBarSizeMarketDataAnalysisResult = ""
 
 def startStrategy(IBClient):
@@ -41,29 +41,47 @@ def startStrategy(IBClient):
                 log("Lost connection.")
             time.sleep(1)
 
+def calculateHeikinAshi(marketData, DEBUG=False):
+    HAData = []
+    for i in range(0, len(marketData)):
+        if i == 0:
+            haOpen = (marketData[i]["Open"])
+        else:
+            haOpen = (haOpen + haClose) / 2
+
+        haClose = (marketData[i]["Open"] + marketData[i]["High"] + marketData[i]["Low"] + marketData[i]["Close"]) / 4
+        HAData.append({"HAOpen": haOpen, "HAClose": haClose})
+        if DEBUG:
+            log(marketData[i]["Date"] + " HAOpen: " + str(haOpen, 2) + " HAClose: " + str(haClose, 2))
+
+    return HAData
+
 def analyzeHistoricalData(marketData, barSize, DEBUG=False):
     OverSold = 20
     OverBought = 80
 
     try:
-        position = len(marketData) - 1
-        openCurrent = 0.5 * (marketData[position - 1]["Open"] + marketData[position - 1]["Close"])
-        openOnePrevious = 0.5 * (marketData[position - 2]["Open"] + marketData[position - 2]["Close"])
-        closeCurrent = 0.25 * (marketData[position]["Open"] + marketData[position]["High"] + marketData[position]["Low"] + marketData[position]["Close"])
-        closeOnePrevious = 0.25 * (marketData[position - 1]["Open"] + marketData[position - 1]["High"] + marketData[position - 1]["Low"] + marketData[position - 1]["Close"])
+        heikinAshiData = calculateHeikinAshi(marketData)
+        position = len(heikinAshiData) - 1
+        openCurrent = heikinAshiData[position]["Open"]
+        openOnePrevious = heikinAshiData[position - 1]["Open"]
+        closeCurrent = heikinAshiData[position]["Close"]
+        closeOnePrevious = heikinAshiData[position - 1]["Close"]
 
         if DEBUG:
             log("Stochastic (0):" + (str(getStochastic(0, marketData))) + ".")
             log("Stochastic (1):" + (str(getStochastic(1, marketData))) + ".")
             log("Stochastic (2):" + (str(getStochastic(2, marketData))) + ".")
             log("Stochastic (3):" + (str(getStochastic(3, marketData))) + ".")
+            log("Stochastic (4):" + (str(getStochastic(4, marketData))) + ".")
 
         # Long Trade
         if ((closeCurrent > openCurrent) and (closeOnePrevious < openOnePrevious)):
             if ((getStochastic(0, marketData) > OverSold) and (
                     (getStochastic(1, marketData) < OverSold) or
                     (getStochastic(2, marketData) < OverSold) or
-                    (getStochastic(3, marketData) < OverSold))):
+                    (getStochastic(3, marketData) < OverSold) or
+                    (getStochastic(4, marketData) < OverSold))):
                 if DEBUG:
                     log("Long Trade")
                 return "Long"
@@ -73,7 +91,8 @@ def analyzeHistoricalData(marketData, barSize, DEBUG=False):
             if ((getStochastic(0, marketData) < OverBought) and (
                     (getStochastic(1, marketData) > OverBought) or
                     (getStochastic(2, marketData) > OverBought) or
-                    (getStochastic(3, marketData) > OverBought))):
+                    (getStochastic(3, marketData) > OverBought) or
+                    (getStochastic(4, marketData) > OverBought))):
                 if DEBUG:
                     log("Short Trade")
                 return "Short"
