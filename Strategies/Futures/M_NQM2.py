@@ -8,8 +8,13 @@ from Brokers.InteractiveBrokers.marketOrders import *
 currentHour = -1
 currentMinute = -1
 
-fourHoursBarSizeMarketDataAnalysisResult = "Long"
-thirtyMinutesBarSizeMarketDataAnalysisResult = ""
+class Trend:
+    SHORT = 1
+    LONG = 2
+    NA = 3
+
+fourHoursBarSizeMarketDataAnalysisResult = Trend.LONG
+thirtyMinutesBarSizeMarketDataAnalysisResult = Trend.NA
 
 def startStrategy(IBClient):
     global currentHour
@@ -21,14 +26,14 @@ def startStrategy(IBClient):
     while True:
         if not isTradeTime(datetime.time(17, 00), datetime.time(18, 00)):
             if isinstance(IBClient.nextorderId, int):
-                if (((getDay() == "Sunday") and (datetime.datetime.now(tz=EST5EDT()).time().hour >= 18)) or
+                if True or (((getDay() == "Sunday") and (datetime.datetime.now(tz=EST5EDT()).time().hour >= 18)) or
                         (getDay() == "Monday" or getDay() == "Tuesday" or getDay() == "Wednesday" or getDay() == "Thursday") or
                         ((getDay() == "Friday") and (isTradeTime(datetime.time(00, 00), datetime.time(16, 29))))):
 
                     if ((datetime.datetime.now(tz=EST5EDT()).time().hour in [2, 6, 10, 14, 18, 22]) and (datetime.datetime.now(tz=EST5EDT()).time().minute == 0)):
                         analyzeFourHoursBarSizeHistoricalData(IBClient)
 
-                    if ((datetime.datetime.now(tz=EST5EDT()).time().minute in [0, 30])):
+                    if True or ((datetime.datetime.now(tz=EST5EDT()).time().minute in [0, 30])):
                         if currentMinute != datetime.datetime.now(tz=EST5EDT()).time().minute:
                             analyzeThirtyMinutesBarSizeHistoricalData(IBClient)
                             stateMachine(IBClient, True)
@@ -48,7 +53,7 @@ def calculateHeikinAshi(marketData, DEBUG=False):
     HAData = []
 
     try:
-        for i in range(0, len(marketData)):
+        for i in range(0, len(marketData) - 1):
             if i == 0:
                 haOpen = marketData[i]["Open"]
             else:
@@ -88,7 +93,7 @@ def analyzeHistoricalData(marketData, barSize, DEBUG=False):
                     (getStochastic(4, marketData) < OverSold))):
                 if DEBUG:
                     log("Long Trade")
-                return "Long"
+                return Trend.LONG
 
         # Short Trade
         if ((closeCurrent < openCurrent) and (closeOnePrevious > openOnePrevious)):
@@ -99,13 +104,13 @@ def analyzeHistoricalData(marketData, barSize, DEBUG=False):
                     (getStochastic(4, marketData) > OverBought))):
                 if DEBUG:
                     log("Short Trade")
-                return "Short"
+                return Trend.SHORT
+
+            else:
+                if barSize == 4:
+                    return fourHoursBarSizeMarketDataAnalysisResult
     except Exception as e:
         print(e)
-    finally:
-        if barSize == 4:
-            return fourHoursBarSizeMarketDataAnalysisResult
-        return ""
 
 def analyzeFourHoursBarSizeHistoricalData(IBClient):
     global currentHour
@@ -145,14 +150,14 @@ def stateMachine(IBClient, DEBUG=False):
 
     if DEBUG:
         log("Place Order: (" +
-              str(fourHoursBarSizeMarketDataAnalysisResult if fourHoursBarSizeMarketDataAnalysisResult != "" else "No Entry") + "," +
-              str(thirtyMinutesBarSizeMarketDataAnalysisResult if thirtyMinutesBarSizeMarketDataAnalysisResult != "" else "No Entry") + ").")
+              str("Long" if fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG else "Short") + "," +
+              str("Long" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG else ("Short" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT else "No Entry")) + ").")
 
-    if (fourHoursBarSizeMarketDataAnalysisResult == "Long" and thirtyMinutesBarSizeMarketDataAnalysisResult == "Long"):
+    if (fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG):
         executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "BUY", 1)
-    elif (fourHoursBarSizeMarketDataAnalysisResult == "Long" and thirtyMinutesBarSizeMarketDataAnalysisResult == "Short"):
+    elif (fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT):
         executeOrder(IBClient, contract("MNQM2", "FUT", "GLOBEX", "USD"), "SELL", 4)
-    elif (fourHoursBarSizeMarketDataAnalysisResult == "Short" and thirtyMinutesBarSizeMarketDataAnalysisResult == "Long"):
+    elif (fourHoursBarSizeMarketDataAnalysisResult == Trend.SHORT and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG):
         executeOrder(IBClient, contract("MNQM2", "FUT", "GLOBEX", "USD"), "BUY", 4)
-    elif (fourHoursBarSizeMarketDataAnalysisResult == "Short" and thirtyMinutesBarSizeMarketDataAnalysisResult == "Short"):
+    elif (fourHoursBarSizeMarketDataAnalysisResult == Trend.SHORT and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT):
         executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "SELL", 1)
