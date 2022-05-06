@@ -71,17 +71,13 @@ def analyzeHistoricalData(marketData, barSize, DEBUG=False):
     try:
         heikinAshiData = calculateHeikinAshi(marketData)
         position = len(heikinAshiData) - 1
-        openCurrent = heikinAshiData[position]["Open"]
-        openOnePrevious = heikinAshiData[position - 1]["Open"]
-        closeCurrent = heikinAshiData[position]["Close"]
-        closeOnePrevious = heikinAshiData[position - 1]["Close"]
+        openCurrent = heikinAshiData[position]["HAOpen"]
+        openOnePrevious = heikinAshiData[position - 1]["HAOpen"]
+        closeCurrent = heikinAshiData[position]["HAClose"]
+        closeOnePrevious = heikinAshiData[position - 1]["HAClose"]
 
         if DEBUG:
-            log("Stochastic (0):" + (str(getStochastic(0, marketData))) + ".")
-            log("Stochastic (1):" + (str(getStochastic(1, marketData))) + ".")
-            log("Stochastic (2):" + (str(getStochastic(2, marketData))) + ".")
-            log("Stochastic (3):" + (str(getStochastic(3, marketData))) + ".")
-            log("Stochastic (4):" + (str(getStochastic(4, marketData))) + ".")
+            log("HAOpen:" + str(openCurrent) + " , HAClose:" + str(closeCurrent) + " , Stochastic:" + (str(getStochastic(0, marketData))) + ".")
 
         # Long Trade
         if ((closeCurrent > openCurrent) and (closeOnePrevious < openOnePrevious)):
@@ -122,7 +118,7 @@ def analyzeFourHoursBarSizeHistoricalData(IBClient):
         while (IBClient.historicalDataEndStatus == False):
             pass
         fourHoursBarSizeMarketData = IBClient.historicalDataArray
-        fourHoursBarSizeMarketDataAnalysisResult = analyzeHistoricalData(fourHoursBarSizeMarketData, 4, False)
+        fourHoursBarSizeMarketDataAnalysisResult = analyzeHistoricalData(fourHoursBarSizeMarketData, 4, True)
         IBClient.historicalDataArray = []
         IBClient.historicalDataEndStatus = False
         currentHour = datetime.datetime.now(tz=EST5EDT()).time().hour
@@ -139,7 +135,7 @@ def analyzeThirtyMinutesBarSizeHistoricalData(IBClient):
     while (IBClient.historicalDataEndStatus == False):
         pass
     thirtyMinutesBarSizeMarketData = IBClient.historicalDataArray
-    thirtyMinutesBarSizeMarketDataAnalysisResult = analyzeHistoricalData(thirtyMinutesBarSizeMarketData, 30, False)
+    thirtyMinutesBarSizeMarketDataAnalysisResult = analyzeHistoricalData(thirtyMinutesBarSizeMarketData, 30, True)
     IBClient.historicalDataArray = []
     IBClient.historicalDataEndStatus = False
 

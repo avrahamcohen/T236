@@ -16,11 +16,11 @@ def initialization():
     startStrategyFuturesNasdaqThread = threading.Thread(target=startStrategyFuturesNasdaq, args=(), daemon=True)
     startStrategyFuturesNasdaqThread.start()
 
-    # print("Starting the Options Strategy for the NQM2 and MNQM2 assets.")
-    # startStrategyOptionsNasdaqThread = threading.Thread(target=startStrategyOptionsNasdaq, args=(), daemon=True)
-    # startStrategyOptionsNasdaqThread.start()
+    #print("Starting the Options Strategy for the NQM2 and MNQM2 assets.")
+    #startStrategyOptionsNasdaqThread = threading.Thread(target=startStrategyOptionsNasdaq, args=(), daemon=True)
+    #startStrategyOptionsNasdaqThread.start()
 
-    ''' Testing '''
+    #''' Testing '''
     #log("''' TESTING '''")
     #testingPurposesThread = threading.Thread(target=testingPurposes, args=(), daemon=True)
     #testingPurposesThread.start()
