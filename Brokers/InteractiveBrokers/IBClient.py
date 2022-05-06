@@ -50,4 +50,7 @@ class IBapi(EWrapper, EClient):
             order.account = account
             order.totalQuantity = abs(position)
             order.action = ('BUY', 'SELL')[position > 0]
-            self.placeOrder(self.nextId, contract, order)
+            #self.placeOrder(self.nextId, contract, order)
+            #Added by Avi
+            self.placeOrder(self.nextorderId, contract, order)
+            self.nextorderId += 1

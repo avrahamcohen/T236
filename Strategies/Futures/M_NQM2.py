@@ -13,7 +13,7 @@ class Trend:
     LONG = 2
     NA = 3
 
-fourHoursBarSizeMarketDataAnalysisResult = Trend.LONG
+fourHoursBarSizeMarketDataAnalysisResult = Trend.SHORT
 thirtyMinutesBarSizeMarketDataAnalysisResult = Trend.NA
 
 def startStrategy(IBClient):
@@ -22,6 +22,8 @@ def startStrategy(IBClient):
 
     while (datetime.datetime.now(tz=EST5EDT()).time().microsecond > 90000):
         pass
+
+    #TODO To test 'Close All Positions.'
 
     while True:
         if not isTradeTime(datetime.time(17, 00), datetime.time(18, 00)):
@@ -55,15 +57,15 @@ def calculateHeikinAshi(marketData, DEBUG=False):
     try:
         for i in range(0, len(marketData) - 1):
             if i == 0:
-                haOpen = marketData[i]["Open"]
+                haOpen = round(marketData[i]["Open"], 2)
             else:
-                haOpen = (haOpen + haClose) / 2
+                haOpen = round((haOpen + haClose) / 2, 2)
 
-            haClose = (marketData[i]["Open"] + marketData[i]["High"] + marketData[i]["Low"] + marketData[i]["Close"]) / 4
+            haClose = round((marketData[i]["Open"] + marketData[i]["High"] + marketData[i]["Low"] + marketData[i]["Close"]) / 4, 2)
             HAData.append({"HAOpen": haOpen, "HAClose": haClose})
 
             if DEBUG:
-                log(marketData[i]["Date"] + " HAOpen: " + str(haOpen) + " HAClose: " + str(haClose))
+                print(marketData[i]["Date"] + " HAOpen: " + str(haOpen) + " HAClose: " + str(haClose))
     except Exception as e:
         print("Exception in HA" + str(e))
 
@@ -74,7 +76,7 @@ def analyzeHistoricalData(marketData, barSize, DEBUG=False):
     OverBought = 80
 
     try:
-        heikinAshiData = calculateHeikinAshi(marketData)
+        heikinAshiData = calculateHeikinAshi(marketData, False)
         position = len(heikinAshiData) - 1
         openCurrent = heikinAshiData[position]["HAOpen"]
         openOnePrevious = heikinAshiData[position - 1]["HAOpen"]
@@ -150,7 +152,7 @@ def stateMachine(IBClient, DEBUG=False):
 
     if DEBUG:
         log("Place Order: (" +
-              str("Long" if fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG else "Short") + "," +
+              str("Long" if fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG else "Short") + " , " +
               str("Long" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG else ("Short" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT else "No Entry")) + ").")
 
     if (fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG):
