@@ -46,18 +46,21 @@ def calculateHeikinAshi(marketData, DEBUG=False):
     haClose = 0
 
     HAData = []
-    
-    for i in range(0, len(marketData)):
-        if i == 0:
-            haOpen = (marketData[i]["Open"])
-        else:
-            haOpen = (haOpen + haClose) / 2
 
-        haClose = (marketData[i]["Open"] + marketData[i]["High"] + marketData[i]["Low"] + marketData[i]["Close"]) / 4
-        HAData.append({"HAOpen": haOpen, "HAClose": haClose})
-        
-        if DEBUG:
-            log(marketData[i]["Date"] + " HAOpen: " + str(haOpen) + " HAClose: " + str(haClose))
+    try:
+        for i in range(0, len(marketData)):
+            if i == 0:
+                haOpen = marketData[i]["Open"]
+            else:
+                haOpen = (haOpen + haClose) / 2
+
+            haClose = (marketData[i]["Open"] + marketData[i]["High"] + marketData[i]["Low"] + marketData[i]["Close"]) / 4
+            HAData.append({"HAOpen": haOpen, "HAClose": haClose})
+
+            if DEBUG:
+                log(marketData[i]["Date"] + " HAOpen: " + str(haOpen) + " HAClose: " + str(haClose))
+    except Exception as e:
+        print("Exception in HA" + str(e))
 
     return HAData
 
