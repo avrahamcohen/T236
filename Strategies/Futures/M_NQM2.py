@@ -51,7 +51,7 @@ def analyzeHistoricalData(marketData, barSize, DEBUG=False):
     OverBought = 80
 
     try:
-        heikinAshiData = getHeikinAshi(marketData, True)
+        heikinAshiData = getHeikinAshi(marketData, False)
         position = len(heikinAshiData) - 1
         openCurrent = heikinAshiData[position]["HAOpen"]
         openOnePrevious = heikinAshiData[position - 1]["HAOpen"]
