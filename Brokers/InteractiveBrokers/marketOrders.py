@@ -9,10 +9,13 @@ def contract(localSymbol, secType, exchange, currency):
     contract.currency = currency
     return contract
 
-def executeOrder(IBapp ,contract, action, totalQuantity):
+def executeOrder(IBapp ,contract, action, totalQuantity, OrderType, trailStopPrice=""):
     order = Order()
     order.action = action
     order.totalQuantity = totalQuantity
-    order.orderType = 'MKT'
+    order.orderType = OrderType
+    if OrderType == "TRAIL":
+        order.TrailStopPrice = trailStopPrice
+    #TODO Do we need a new order id for TRAIL after MKT?
     IBapp.placeOrder(IBapp.nextorderId, contract, order)
     IBapp.nextorderId += 1

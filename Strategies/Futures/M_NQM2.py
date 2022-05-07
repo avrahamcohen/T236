@@ -23,8 +23,6 @@ def startStrategy(IBClient):
     while (datetime.datetime.now(tz=EST5EDT()).time().microsecond > 90000):
         pass
 
-    #TODO To test 'Close All Positions.'
-
     while True:
         if not isTradeTime(datetime.time(17, 00), datetime.time(18, 00)):
             if isinstance(IBClient.nextorderId, int):
@@ -48,35 +46,12 @@ def startStrategy(IBClient):
                 log("Lost connection.")
             time.sleep(1)
 
-def calculateHeikinAshi(marketData, DEBUG=False):
-    haOpen = 0
-    haClose = 0
-
-    HAData = []
-
-    try:
-        for i in range(0, len(marketData) - 1):
-            if i == 0:
-                haOpen = round(marketData[i]["Open"], 2)
-            else:
-                haOpen = round((haOpen + haClose) / 2, 2)
-
-            haClose = round((marketData[i]["Open"] + marketData[i]["High"] + marketData[i]["Low"] + marketData[i]["Close"]) / 4, 2)
-            HAData.append({"HAOpen": haOpen, "HAClose": haClose})
-
-            if DEBUG:
-                print(marketData[i]["Date"] + " HAOpen: " + str(haOpen) + " HAClose: " + str(haClose))
-    except Exception as e:
-        print("Exception in HA" + str(e))
-
-    return HAData
-
 def analyzeHistoricalData(marketData, barSize, DEBUG=False):
     OverSold = 20
     OverBought = 80
 
     try:
-        heikinAshiData = calculateHeikinAshi(marketData, False)
+        heikinAshiData = getHeikinAshi(marketData, True)
         position = len(heikinAshiData) - 1
         openCurrent = heikinAshiData[position]["HAOpen"]
         openOnePrevious = heikinAshiData[position - 1]["HAOpen"]
@@ -156,10 +131,14 @@ def stateMachine(IBClient, DEBUG=False):
               str("Long" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG else ("Short" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT else "No Entry")) + ").")
 
     if (fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG):
-        executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "BUY", 1)
+        executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "BUY", 1, "MKT")
+        executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "SELL", 1, "TRAIL", 15)
     elif (fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT):
-        executeOrder(IBClient, contract("MNQM2", "FUT", "GLOBEX", "USD"), "SELL", 4)
+        executeOrder(IBClient, contract("MNQM2", "FUT", "GLOBEX", "USD"), "SELL", 4, "MKT")
+        executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "BUY", 4, "TRAIL", 15)
     elif (fourHoursBarSizeMarketDataAnalysisResult == Trend.SHORT and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG):
-        executeOrder(IBClient, contract("MNQM2", "FUT", "GLOBEX", "USD"), "BUY", 4)
+        executeOrder(IBClient, contract("MNQM2", "FUT", "GLOBEX", "USD"), "BUY", 4, "MKT")
+        executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "SELL", 4, "TRAIL", 15)
     elif (fourHoursBarSizeMarketDataAnalysisResult == Trend.SHORT and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT):
-        executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "SELL", 1)
+        executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "SELL", 1, "MKT")
+        executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "BUY", 1, "TRAIL", 15)

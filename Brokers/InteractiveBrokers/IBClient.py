@@ -43,11 +43,9 @@ class IBapi(EWrapper, EClient):
 
         # 1. Big Red Button should be in the active mode (Button pressed)
         # 2. Position should be real (avgCost > 0 and position is not 0)
-        # 3. Cumulative account 'All' should be skipped
-        if avgCost and position and (account != 'All'):
+        if avgCost and position:
             order = Order()
             order.orderType = 'MKT'
-            order.account = account
             order.totalQuantity = abs(position)
             order.action = ('BUY', 'SELL')[position > 0]
             #self.placeOrder(self.nextId, contract, order)

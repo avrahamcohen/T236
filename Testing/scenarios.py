@@ -1,52 +1,21 @@
 #!/usr/bin/env python3
 
-import time
-from math import ceil
 from Brokers.InteractiveBrokers.dataFarm import *
 from Brokers.InteractiveBrokers.marketOrders import *
 
-def calculateHeikinAshi(IBClient, marketData, DEBUG=False):
-    haOpen = 0
-    haClose = 0
-    stochastic = 0
-
-    HAData = []
-
-    try:
-        for i in range(0, len(marketData) - 1):
-            if i == 0:
-                haOpen = round(marketData[i]["Open"], 2)
-            else:
-                haOpen = round((haOpen + haClose) / 2, 2)
-
-            haClose = round((marketData[i]["Open"] + marketData[i]["High"] + marketData[i]["Low"] + marketData[i]["Close"]) / 4, 2)
-            stochastic = getStochastic(len(marketData) - i - 1, IBClient.historicalDataArray)
-            HAData.append({"Date" : marketData[i]["Date"] ,"HAOpen": ceil(haOpen * 100) / 100.0, "HAClose": ceil(haClose * 100) / 100.0, "Stochastic": stochastic})
-
-            if DEBUG:
-                print(str(i) + ". " + marketData[i]["Date"] + " HAOpen: " + str(haOpen) + " HAClose: " + str(haClose) + " Stochastic: " + str(getStochastic(len(marketData) - i - 1, IBClient.historicalDataArray)))
-    except Exception as e:
-        print("Exception in HA" + str(e))
-
-    return HAData
-
-
-def testHeikinAshi(IBClient):
+def testM_NQM2Strategy(IBClient):
     OverSold = 20
     OverBought = 80
 
     while not isinstance(IBClient.nextorderId, int):
         pass
 
-    getCandles(IBClient, "50 D", "30 mins", "TRADES", contract("NQM2", "FUT", "GLOBEX", "USD"))
+    getCandles(IBClient, "3 D", "30 mins", "TRADES", contract("NQM2", "FUT", "GLOBEX", "USD"))
 
     while (IBClient.historicalDataEndStatus == False):
         pass
 
-    heikinAshiData = calculateHeikinAshi(IBClient, IBClient.historicalDataArray, False)
-
-    #for i in heikinAshiData:
-    #    print(i)
+    heikinAshiData = getHeikinAshi(IBClient.historicalDataArray, False, True)
 
     for i in range(4, len(heikinAshiData)):
         isTrade = False
@@ -80,6 +49,5 @@ def testHeikinAshi(IBClient):
             if isTrade == False:
                 print(str(heikinAshiData[i]) + " -> Order: No Trade")
 
-
         except Exception as e:
-            print("bla")
+            print(e)
