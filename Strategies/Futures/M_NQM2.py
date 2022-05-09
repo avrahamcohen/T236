@@ -24,17 +24,19 @@ def startStrategy(IBClient):
         pass
 
     while True:
-        if not isTradeTime(datetime.time(17, 00), datetime.time(18, 00)):
+        if True or not isTradeTime(datetime.time(17, 00), datetime.time(18, 00)):
             if isinstance(IBClient.nextorderId, int):
-                if (((getDay() == "Sunday") and (datetime.datetime.now(tz=EST5EDT()).time().hour >= 18)) or
+                if True or (((getDay() == "Sunday") and (datetime.datetime.now(tz=EST5EDT()).time().hour >= 18)) or
                         (getDay() == "Monday" or getDay() == "Tuesday" or getDay() == "Wednesday" or getDay() == "Thursday") or
                         ((getDay() == "Friday") and (isTradeTime(datetime.time(00, 00), datetime.time(16, 29))))):
 
                     if ((datetime.datetime.now(tz=EST5EDT()).time().hour in [2, 6, 10, 14, 18, 22]) and (datetime.datetime.now(tz=EST5EDT()).time().minute == 0)):
+                        time.sleep(1)
                         analyzeFourHoursBarSizeHistoricalData(IBClient)
 
-                    if ((datetime.datetime.now(tz=EST5EDT()).time().minute in [0, 30])):
+                    if True or ((datetime.datetime.now(tz=EST5EDT()).time().minute in [0, 30])):
                         if currentMinute != datetime.datetime.now(tz=EST5EDT()).time().minute:
+                            time.sleep(1)
                             analyzeThirtyMinutesBarSizeHistoricalData(IBClient)
                             stateMachine(IBClient, True)
                             currentMinute = datetime.datetime.now(tz=EST5EDT()).time().minute
@@ -59,7 +61,7 @@ def analyzeHistoricalData(marketData, barSize, DEBUG=False):
         closeOnePrevious = heikinAshiData[position - 1]["HAClose"]
 
         if DEBUG:
-            log("(Half hour earlier) HAOpen:" + str(openCurrent) + " , HAClose:" + str(closeCurrent) + " , Stochastic:" + (str(getStochastic(1, marketData))) + ".")
+            log("(Half hour earlier) HAOpen:" + str(openCurrent) + " , HAClose:" + str(closeCurrent) + " , Stochastic:" + (str(getStochastic(0, marketData))) + ".")
 
         # Long Trade
         if ((closeCurrent > openCurrent) and (closeOnePrevious < openOnePrevious)):
