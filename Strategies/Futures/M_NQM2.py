@@ -51,7 +51,7 @@ def analyzeHistoricalData(marketData, barSize, DEBUG=False):
     OverBought = 80
 
     try:
-        heikinAshiData = getHeikinAshi(marketData, False)
+        heikinAshiData = getHeikinAshi(marketData, False, False)
         position = len(heikinAshiData) - 1
         openCurrent = heikinAshiData[position]["HAOpen"]
         openOnePrevious = heikinAshiData[position - 1]["HAOpen"]
@@ -59,7 +59,7 @@ def analyzeHistoricalData(marketData, barSize, DEBUG=False):
         closeOnePrevious = heikinAshiData[position - 1]["HAClose"]
 
         if DEBUG:
-            log("HAOpen:" + str(openCurrent) + " , HAClose:" + str(closeCurrent) + " , Stochastic:" + (str(getStochastic(0, marketData))) + ".")
+            log("(Half hour earlier) HAOpen:" + str(openCurrent) + " , HAClose:" + str(closeCurrent) + " , Stochastic:" + (str(getStochastic(1, marketData))) + ".")
 
         # Long Trade
         if ((closeCurrent > openCurrent) and (closeOnePrevious < openOnePrevious)):
@@ -96,7 +96,7 @@ def analyzeFourHoursBarSizeHistoricalData(IBClient):
     if currentHour != datetime.datetime.now(tz=EST5EDT()).time().hour:
         fourHoursBarSizeMarketData = []
         log("Analyze Four Hours Market.")
-        getCandles(IBClient, "3 D", "4 hours", "TRADES", contract("NQM2", "FUT", "GLOBEX", "USD"))
+        getCandles(IBClient, "5 D", "4 hours", "TRADES", contract("NQM2", "FUT", "GLOBEX", "USD"))
         while (IBClient.historicalDataEndStatus == False):
             pass
         fourHoursBarSizeMarketData = IBClient.historicalDataArray
@@ -113,7 +113,7 @@ def analyzeThirtyMinutesBarSizeHistoricalData(IBClient):
     thirtyMinutesBarSizeMarketDataAnalysisResult = ""
 
     log("Analyze Thirty Minutes Market.")
-    getCandles(IBClient, "1 D", "30 mins", "TRADES", contract("NQM2", "FUT", "GLOBEX", "USD"))
+    getCandles(IBClient, "3 D", "30 mins", "TRADES", contract("NQM2", "FUT", "GLOBEX", "USD"))
     while (IBClient.historicalDataEndStatus == False):
         pass
     thirtyMinutesBarSizeMarketData = IBClient.historicalDataArray

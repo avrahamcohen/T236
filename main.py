@@ -6,5 +6,5 @@ from Testing.initialization import testing
 
 if __name__ == '__main__':
     log("Starting the T236 Application.")
-    #initialization()
-    testing()
+    initialization()
+    #testing()

@@ -3,6 +3,13 @@
 from Brokers.InteractiveBrokers.dataFarm import *
 from Brokers.InteractiveBrokers.marketOrders import *
 
+def test_purchase(IBClient):
+    while not isinstance(IBClient.nextorderId, int):
+        pass
+    IBClient.reqPositions()
+    #executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "BUY", 1, "MKT")
+    #executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "SELL", 1, "TRAIL", 15)
+
 def testM_NQM2Strategy(IBClient):
     OverSold = 20
     OverBought = 80

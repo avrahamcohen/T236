@@ -41,14 +41,15 @@ class IBapi(EWrapper, EClient):
     def position(self, account: str, contract: Contract, position: float, avgCost: float):
         EWrapper.position(self, account, contract, position, avgCost)
 
-        # 1. Big Red Button should be in the active mode (Button pressed)
-        # 2. Position should be real (avgCost > 0 and position is not 0)
+        print("Position.", "Account:", account, "Symbol:", contract.symbol, "SecType:",
+        contract.secType, "Currency:", contract.currency, "Position:", position, "Avg cost:", avgCost)
+
+        contract.exchange = "GLOBEX"
+
         if avgCost and position:
             order = Order()
             order.orderType = 'MKT'
             order.totalQuantity = abs(position)
             order.action = ('BUY', 'SELL')[position > 0]
-            #self.placeOrder(self.nextId, contract, order)
-            #Added by Avi
             self.placeOrder(self.nextorderId, contract, order)
             self.nextorderId += 1
