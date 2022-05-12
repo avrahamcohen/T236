@@ -23,7 +23,7 @@ def getHeikinAshi(marketData, DEBUG=False, BACKTEST=False):
     HAData = []
 
     try:
-        for i in range(0, len(marketData) - 1):
+        for i in range(0, len(marketData)):
             if i == 0:
                 haOpen = round(marketData[i]["Open"], 2)
             else:

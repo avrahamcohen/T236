@@ -61,7 +61,7 @@ def analyzeHistoricalData(marketData, barSize, DEBUG=False):
         closeOnePrevious = heikinAshiData[position - 1]["HAClose"]
 
         if DEBUG:
-            print(marketData[-1]["Date"] + " HAOpen:" + str(openCurrent) + " , HAClose:" + str(closeCurrent) + " , Stochastic:" + (str(getStochastic(0, marketData))) + ".")
+            log(" HAOpen:" + str(openCurrent) + " , HAClose:" + str(closeCurrent) + " , Stochastic:" + (str(getStochastic(0, marketData))) + ".")
 
         # Long Trade
         if ((closeCurrent > openCurrent) and (closeOnePrevious < openOnePrevious)):
