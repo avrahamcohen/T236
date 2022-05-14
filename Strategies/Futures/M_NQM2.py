@@ -136,6 +136,11 @@ def stateMachine(IBClient, DEBUG=False):
               str("Long" if fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG else "Short") + " , " +
               str("Long" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG else ("Short" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT else "No Entry")) + ").")
 
+    with open('orders.txt', 'a') as orders:
+        orders.write(str(datetime.datetime.now(tz=EST5EDT()).date()) + " " + str(datetime.datetime.now(tz=EST5EDT()).time()) + ": " + "Place Order: (" +
+              str("Long" if fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG else "Short") + " , " +
+              str("Long" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG else ("Short" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT else "No Entry")) + ").\n")
+
     if (fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG):
         executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "BUY", 1, "MKT")
         executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "SELL", 1, "TRAIL", 15)
