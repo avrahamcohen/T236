@@ -26,6 +26,6 @@ def testScenario1():
     keepAliveThread = threading.Thread(target=keepAlive, args=(IBClients[0], IBClientsId[1],), daemon=True)
     keepAliveThread.start()
 
-    scenarios.test_purchase(IBClients[0])
+    scenarios.testM_NQM2Strategy(IBClients[0])
 
     keepAliveThread.join()

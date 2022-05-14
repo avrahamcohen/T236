@@ -17,7 +17,7 @@ def testM_NQM2Strategy(IBClient):
     while not isinstance(IBClient.nextorderId, int):
         pass
 
-    getCandles(IBClient, "3 D", "30 mins", "TRADES", contract("NQM2", "FUT", "GLOBEX", "USD"))
+    getCandles(IBClient, "3 D", "4 hours", "TRADES", contract("NQM2", "FUT", "GLOBEX", "USD"))
 
     while (IBClient.historicalDataEndStatus == False):
         pass

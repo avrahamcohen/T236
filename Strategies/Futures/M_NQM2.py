@@ -16,12 +16,15 @@ class Trend:
 fourHoursBarSizeMarketDataAnalysisResult = Trend.SHORT
 thirtyMinutesBarSizeMarketDataAnalysisResult = Trend.NA
 
+def clockInit():
+    while (datetime.datetime.now(tz=EST5EDT()).time().microsecond > 90000):
+        pass
+
 def startStrategy(IBClient):
     global currentHour
     global currentMinute
 
-    while (datetime.datetime.now(tz=EST5EDT()).time().microsecond > 90000):
-        pass
+    clockInit()
 
     while True:
         if not isTradeTime(datetime.time(17, 00), datetime.time(18, 00)):
@@ -44,6 +47,7 @@ def startStrategy(IBClient):
                 elif ((getDay() == "Friday") and (isTradeTime(datetime.time(16, 29), datetime.time(16, 30)))):
                     log("Close all positions.")
                     IBClient.reqPositions()
+                    clockInit()
             else:
                 log("Lost connection.")
             time.sleep(1)
