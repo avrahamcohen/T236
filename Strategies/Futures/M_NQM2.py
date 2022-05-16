@@ -116,7 +116,7 @@ def analyzeThirtyMinutesBarSizeHistoricalData(IBClient):
     global thirtyMinutesBarSizeMarketDataAnalysisResult
 
     thirtyMinutesBarSizeMarketData = []
-    thirtyMinutesBarSizeMarketDataAnalysisResult = ""
+    thirtyMinutesBarSizeMarketDataAnalysisResult = Trend.NA
 
     log("Analyze Thirty Minutes Market.")
     getCandles(IBClient, "3 D", "30 mins", "TRADES", contract("NQM2", "FUT", "GLOBEX", "USD"))
@@ -136,10 +136,11 @@ def stateMachine(IBClient, DEBUG=False):
               str("Long" if fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG else "Short") + " , " +
               str("Long" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG else ("Short" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT else "No Entry")) + ").")
 
-    with open('orders.txt', 'a') as orders:
-        orders.write(str(datetime.datetime.now(tz=EST5EDT()).date()) + " " + str(datetime.datetime.now(tz=EST5EDT()).time()) + ": " + "Place Order: (" +
-              str("Long" if fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG else "Short") + " , " +
-              str("Long" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG else ("Short" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT else "No Entry")) + ").\n")
+    if not (thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.NA):
+        with open('orders.txt', 'a') as orders:
+            orders.write(str(datetime.datetime.now(tz=EST5EDT()).date()) + " " + str(datetime.datetime.now(tz=EST5EDT()).time()) + ": " + "Place Order: (" + 
+                    str("Long" if fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG else "Short") + " , " + 
+                    str("Long" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG else ("Short" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT else "No Entry")) + ").\n")
 
     if (fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG):
         executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "BUY", 1, "MKT")
