@@ -47,6 +47,7 @@ def startStrategy(IBClient):
                 elif ((getDay() == "Friday") and (isTradeTime(datetime.time(16, 29), datetime.time(16, 30)))):
                     log("Close all positions.")
                     IBClient.reqPositions()
+                    time.sleep(60)
                     clockInit()
             else:
                 log("Lost connection.")
