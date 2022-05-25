@@ -33,13 +33,16 @@ def startStrategy(IBClient):
                         (getDay() == "Monday" or getDay() == "Tuesday" or getDay() == "Wednesday" or getDay() == "Thursday") or
                         ((getDay() == "Friday") and (isTradeTime(datetime.time(00, 00), datetime.time(16, 29))))):
 
+                    isSleep = False
                     if ((datetime.datetime.now(tz=EST5EDT()).time().hour in [2, 6, 10, 14, 18, 22]) and (datetime.datetime.now(tz=EST5EDT()).time().minute == 0)):
                         time.sleep(1)
+                        isSleep = True
                         analyzeFourHoursBarSizeHistoricalData(IBClient)
 
                     if ((datetime.datetime.now(tz=EST5EDT()).time().minute in [0, 30])):
                         if currentMinute != datetime.datetime.now(tz=EST5EDT()).time().minute:
-                            time.sleep(1)
+                            if (isSleep == False):
+                                time.sleep(1)
                             analyzeThirtyMinutesBarSizeHistoricalData(IBClient)
                             stateMachine(IBClient, True)
                             currentMinute = datetime.datetime.now(tz=EST5EDT()).time().minute

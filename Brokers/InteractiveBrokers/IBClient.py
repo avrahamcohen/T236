@@ -38,6 +38,11 @@ class IBapi(EWrapper, EClient):
         super().historicalDataEnd(reqId, start, end)
         self.historicalDataEndStatus = True
 
+    def error(self, reqId, errorCode, errorString):
+        super().error(reqId, errorCode, errorString)
+
+        print("(Avi)Error. Id:", reqId, "Code:", errorCode, "Msg:", errorString)
+
     def position(self, account: str, contract: Contract, position: float, avgCost: float):
         EWrapper.position(self, account, contract, position, avgCost)
 
