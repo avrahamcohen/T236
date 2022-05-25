@@ -17,6 +17,7 @@ fourHoursBarSizeMarketDataAnalysisResult = Trend.SHORT
 thirtyMinutesBarSizeMarketDataAnalysisResult = Trend.NA
 
 def clockInit():
+    #TODO Improve this.
     while (datetime.datetime.now(tz=EST5EDT()).time().microsecond > 90000):
         pass
 
@@ -27,34 +28,49 @@ def startStrategy(IBClient):
     clockInit()
 
     while True:
-        if not isTradeTime(datetime.time(17, 00), datetime.time(18, 00)):
-            if isinstance(IBClient.nextorderId, int):
-                if (((getDay() == "Sunday") and (datetime.datetime.now(tz=EST5EDT()).time().hour >= 18)) or
-                        (getDay() == "Monday" or getDay() == "Tuesday" or getDay() == "Wednesday" or getDay() == "Thursday") or
-                        ((getDay() == "Friday") and (isTradeTime(datetime.time(00, 00), datetime.time(16, 29))))):
+        try:
+            if not isTradeTime(datetime.time(17, 00), datetime.time(18, 00)):
+                if isinstance(IBClient.nextorderId, int):
+                    if (((getDay() == "Sunday") and (datetime.datetime.now(tz=EST5EDT()).time().hour >= 18)) or
+                            (getDay() == "Monday" or getDay() == "Tuesday" or getDay() == "Wednesday" or getDay() == "Thursday") or
+                            ((getDay() == "Friday") and (isTradeTime(datetime.time(00, 00), datetime.time(16, 29))))):
 
-                    isSleep = False
-                    if ((datetime.datetime.now(tz=EST5EDT()).time().hour in [2, 6, 10, 14, 18, 22]) and (datetime.datetime.now(tz=EST5EDT()).time().minute == 0)):
-                        time.sleep(1)
-                        isSleep = True
-                        analyzeFourHoursBarSizeHistoricalData(IBClient)
+                        isSleep = False
+                        if ((datetime.datetime.now(tz=EST5EDT()).time().hour in [2, 6, 10, 14, 18, 22]) and (datetime.datetime.now(tz=EST5EDT()).time().minute == 0)):
+                            time.sleep(1)
+                            isSleep = True
+                            analyzeFourHoursBarSizeHistoricalData(IBClient)
 
-                    if ((datetime.datetime.now(tz=EST5EDT()).time().minute in [0, 30])):
-                        if currentMinute != datetime.datetime.now(tz=EST5EDT()).time().minute:
-                            if (isSleep == False):
-                                time.sleep(1)
-                            analyzeThirtyMinutesBarSizeHistoricalData(IBClient)
-                            stateMachine(IBClient, True)
-                            currentMinute = datetime.datetime.now(tz=EST5EDT()).time().minute
+                        if ((datetime.datetime.now(tz=EST5EDT()).time().minute in [0, 30])):
+                            if currentMinute != datetime.datetime.now(tz=EST5EDT()).time().minute:
+                                if (isSleep == False):
+                                    time.sleep(1)
+                                analyzeThirtyMinutesBarSizeHistoricalData(IBClient)
+                                stateMachine(IBClient, True)
+                                currentMinute = datetime.datetime.now(tz=EST5EDT()).time().minute
 
-                elif ((getDay() == "Friday") and (isTradeTime(datetime.time(16, 29), datetime.time(16, 30)))):
-                    log("Close all positions.")
-                    IBClient.reqPositions()
-                    time.sleep(60)
-                    clockInit()
-            else:
-                log("Lost connection.")
-            time.sleep(1)
+                    elif ((getDay() == "Friday") and (isTradeTime(datetime.time(16, 29), datetime.time(16, 30)))):
+                        log("Close all positions.")
+                        IBClient.reqPositions()
+                        closeAllPositions(IBClient)
+                        time.sleep(60)
+                        clockInit()
+                else:
+                    log("Lost connection.")
+                time.sleep(1)
+        except:
+            pass
+
+def closeAllPositions(IBClient):
+    while (IBClient.openPositionDataEndStatus == False):
+        pass
+    for position in IBClient.openPositionDataArray:
+        if position["avgCost"] and position["position"]:
+            position["contract"].exchange = "GLOBEX"
+            executeOrder(IBClient, position["contract"], ('BUY', 'SELL')[position["position"] > 0], abs(position["position"]), "MKT")
+
+    IBClient.openPositionDataArray = []
+    IBClient.openPositionDataEndStatus = False
 
 def analyzeHistoricalData(marketData, barSize, DEBUG=False):
     OverSold = 20

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import time
 import threading
 from Support.utils import log
 from Support.keepAlive import keepAlive
@@ -12,14 +13,9 @@ IBClientsId = [100, 200]
 def initialization():
 
     log("Starting the Future Strategy for the NQM2 and MNQM2 assets.")
+    time.sleep(1)
     startStrategyFuturesNasdaqThread = threading.Thread(target=startStrategyFuturesNasdaq, args=(), daemon=True)
     startStrategyFuturesNasdaqThread.start()
-
-    #print("Starting the Options Strategy for the NQM2 and MNQM2 assets.")
-    #startStrategyOptionsNasdaqThread = threading.Thread(target=startStrategyOptionsNasdaq, args=(), daemon=True)
-    #startStrategyOptionsNasdaqThread.start()
-
-    #startStrategyOptionsNasdaqThread.join()
     startStrategyFuturesNasdaqThread.join()
 
 def startStrategyFuturesNasdaq():
@@ -27,12 +23,11 @@ def startStrategyFuturesNasdaq():
     global IBClientsId
 
     IBClients.append(interactiveBrokers.IBapi())
+    IBClients[0].clientID = IBClientsId[0]
 
-    keepAliveThread = threading.Thread(target=keepAlive, args=(IBClients[0], IBClientsId[0],), daemon=True)
+    keepAliveThread = threading.Thread(target=keepAlive, args=(IBClients[0],), daemon=True)
     keepAliveThread.start()
-
     M_NQM2startStrategy(IBClients[0])
-
     keepAliveThread.join()
 
 def startStrategyOptionsNasdaq():

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-
-from ibapi.order import *
+from ibapi.common import TickerId
 from ibapi.client import EClient
 from ibapi.wrapper import EWrapper
 from ibapi.contract import Contract
@@ -8,6 +7,10 @@ from ibapi.contract import Contract
 class IBapi(EWrapper, EClient):
     historicalDataArray = []
     historicalDataEndStatus = False
+    openPositionDataArray = []
+    openPositionDataEndStatus = False
+    clientID = 0
+    errorCode = -1
 
     def __init__(self):
         EClient.__init__(self, self)
@@ -38,23 +41,14 @@ class IBapi(EWrapper, EClient):
         super().historicalDataEnd(reqId, start, end)
         self.historicalDataEndStatus = True
 
-    def error(self, reqId, errorCode, errorString):
+    def error(self, reqId: TickerId, errorCode: int, errorString: str, advancedOrderRejectJson=""):
         super().error(reqId, errorCode, errorString)
-
-        print("(Avi)Error. Id:", reqId, "Code:", errorCode, "Msg:", errorString)
+        self.errorCode = errorCode
 
     def position(self, account: str, contract: Contract, position: float, avgCost: float):
         EWrapper.position(self, account, contract, position, avgCost)
+        self.openPositionDataArray.append({"position": position, "avgCost": avgCost, "contract": contract})
 
-        print("Position.", "Account:", account, "Symbol:", contract.symbol, "SecType:",
-        contract.secType, "Currency:", contract.currency, "Position:", position, "Avg cost:", avgCost)
-
-        contract.exchange = "GLOBEX"
-
-        if avgCost and position:
-            order = Order()
-            order.orderType = 'MKT'
-            order.totalQuantity = abs(position)
-            order.action = ('BUY', 'SELL')[position > 0]
-            self.placeOrder(self.nextorderId, contract, order)
-            self.nextorderId += 1
+    def positionEnd(self):
+        super().positionEnd()
+        self.openPositionDataEndStatus = True

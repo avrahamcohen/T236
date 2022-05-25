@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
+import time
 
-def keepAlive(IBClient, clientId):
+
+def keepAlive(IBClient):
     IBClient.nextorderId = None
 
     while True:
-        IBClient.connect('127.0.0.1', 4002, clientId)
-        IBClient.nextorderId = None
-        IBClient.run()
-
-        while (IBClient.isConnected() == True): pass
+        if ((IBClient.isConnected() == False) or (IBClient.errorCode == 502)):
+            IBClient.connect('127.0.0.1', 4002, IBClient.clientID)
+            IBClient.nextorderId = None
+            IBClient.run()
+            IBClient.disconnect()
+    
+            time.sleep(1)

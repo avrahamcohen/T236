@@ -17,7 +17,7 @@ def testing():
     testingPurposesThread.join()
 
 '''testM_NQM2Strategy'''
-def testScenario1():
+def testM_NQM2Strategy():
     global IBClients
     global IBClientsId
 
