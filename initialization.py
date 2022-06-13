@@ -11,24 +11,19 @@ IBClients = []
 IBClientsId = [100, 200]
 
 def initialization():
+    global IBClients
+    global IBClientsId
 
     log("Starting the Future Strategy for the NQM2 and MNQM2 assets.")
     time.sleep(1)
-    startStrategyFuturesNasdaqThread = threading.Thread(target=startStrategyFuturesNasdaq, args=(), daemon=True)
-    startStrategyFuturesNasdaqThread.start()
-    startStrategyFuturesNasdaqThread.join()
-
-def startStrategyFuturesNasdaq():
-    global IBClients
-    global IBClientsId
 
     IBClients.append(interactiveBrokers.IBapi())
     IBClients[0].clientID = IBClientsId[0]
 
+    startStrategyFuturesNasdaqThread = threading.Thread(target=M_NQM2startStrategy, args=(IBClients[0],), daemon=True)
     keepAliveThread = threading.Thread(target=keepAlive, args=(IBClients[0],), daemon=True)
-    keepAliveThread.start()
-    M_NQM2startStrategy(IBClients[0])
-    keepAliveThread.join()
 
-def startStrategyOptionsNasdaq():
-    pass
+    keepAliveThread.start()
+    startStrategyFuturesNasdaqThread.start()
+    startStrategyFuturesNasdaqThread.join()
+    keepAliveThread.join()

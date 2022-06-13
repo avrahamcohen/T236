@@ -1,31 +1,38 @@
 #!/usr/bin/env python3
 
+import time
 import threading
-from Testing import scenarios
 from Support.utils import log
 from Support.keepAlive import keepAlive
+from Testing.scenarios import testM_NQM2Strategy
 import Brokers.InteractiveBrokers.IBClient as interactiveBrokers
 
 IBClients = []
 IBClientsId = [100, 200]
 
 def testing():
-    ''' Testing '''
-    log("''' TESTING '''")
-    testingPurposesThread = threading.Thread(target=testScenario1, args=(), daemon=True)
-    testingPurposesThread.start()
-    testingPurposesThread.join()
-
-'''testM_NQM2Strategy'''
-def testM_NQM2Strategy():
     global IBClients
     global IBClientsId
 
+    log("Testing")
+    time.sleep(1)
+
     IBClients.append(interactiveBrokers.IBapi())
+    IBClients[0].clientID = IBClientsId[0]
 
-    keepAliveThread = threading.Thread(target=keepAlive, args=(IBClients[0], IBClientsId[1],), daemon=True)
+    testingPurposesThread = threading.Thread(target=testM_NQM2Strategy, args=(IBClients[0],), daemon=True)
+    keepAliveThread = threading.Thread(target=keepAlive, args=(IBClients[0],), daemon=True)
+
     keepAliveThread.start()
-
-    scenarios.testM_NQM2Strategy(IBClients[0])
-
+    testingPurposesThread.start()
+    testingPurposesThread.join()
     keepAliveThread.join()
+
+
+
+
+
+
+    ()
+
+

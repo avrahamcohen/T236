@@ -13,7 +13,7 @@ class Trend:
     LONG = 2
     NA = 3
 
-fourHoursBarSizeMarketDataAnalysisResult = Trend.SHORT
+fourHoursBarSizeMarketDataAnalysisResult = Trend.NA
 thirtyMinutesBarSizeMarketDataAnalysisResult = Trend.NA
 
 def clockInit():
@@ -25,6 +25,13 @@ def startStrategy(IBClient):
     global currentHour
     global currentMinute
 
+    fourHoursBarSizeMarketDataAnalysisResult = fourHoursBarSizeMarketDataAnalysisResultInitialization(IBClient)
+
+    if (fourHoursBarSizeMarketDataAnalysisResult == Trend.NA):
+        log("Could not identified 4 hours bar size trend. Exiting.")
+        exit(0)
+    log("4 Hour bar size trend set to: " + str("Long" if fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG else ("Short" if fourHoursBarSizeMarketDataAnalysisResult == Trend.SHORT else "Error")) + ".\n")
+
     clockInit()
 
     while True:
@@ -35,16 +42,13 @@ def startStrategy(IBClient):
                             (getDay() == "Monday" or getDay() == "Tuesday" or getDay() == "Wednesday" or getDay() == "Thursday") or
                             ((getDay() == "Friday") and (isTradeTime(datetime.time(00, 00), datetime.time(16, 29))))):
 
-                        isSleep = False
                         if ((datetime.datetime.now(tz=EST5EDT()).time().hour in [2, 6, 10, 14, 18, 22]) and (datetime.datetime.now(tz=EST5EDT()).time().minute == 0)):
                             time.sleep(1)
-                            isSleep = True
                             analyzeFourHoursBarSizeHistoricalData(IBClient)
 
                         if ((datetime.datetime.now(tz=EST5EDT()).time().minute in [0, 30])):
                             if currentMinute != datetime.datetime.now(tz=EST5EDT()).time().minute:
-                                if (isSleep == False):
-                                    time.sleep(1)
+                                time.sleep(1)
                                 analyzeThirtyMinutesBarSizeHistoricalData(IBClient)
                                 stateMachine(IBClient, True)
                                 currentMinute = datetime.datetime.now(tz=EST5EDT()).time().minute
@@ -135,7 +139,6 @@ def analyzeThirtyMinutesBarSizeHistoricalData(IBClient):
 
     thirtyMinutesBarSizeMarketData = []
     thirtyMinutesBarSizeMarketDataAnalysisResult = Trend.NA
-
     log("Analyze Thirty Minutes Market.")
     getCandles(IBClient, "3 D", "30 mins", "TRADES", contract("NQM2", "FUT", "GLOBEX", "USD"))
     while (IBClient.historicalDataEndStatus == False):
@@ -161,18 +164,63 @@ def stateMachine(IBClient, DEBUG=False):
         pass
 
     if (fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG):
-        log("Place Order: (Long, Long)")
+        log("Place Order: (Long, Long)", True)
         executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "BUY", 1, "MKT")
         executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "SELL", 1, "TRAIL", 20)
     elif (fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT):
-        log("Place Order: (Long, Short)")
+        log("Place Order: (Long, Short)", True)
         executeOrder(IBClient, contract("MNQM2", "FUT", "GLOBEX", "USD"), "SELL", 4, "MKT")
         executeOrder(IBClient, contract("MNQM2", "FUT", "GLOBEX", "USD"), "BUY", 4, "TRAIL", 20)
     elif (fourHoursBarSizeMarketDataAnalysisResult == Trend.SHORT and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG):
-        log("Place Order: (Short, Long)")
+        log("Place Order: (Short, Long)", True)
         executeOrder(IBClient, contract("MNQM2", "FUT", "GLOBEX", "USD"), "BUY", 4, "MKT")
         executeOrder(IBClient, contract("MNQM2", "FUT", "GLOBEX", "USD"), "SELL", 4, "TRAIL", 20)
     elif (fourHoursBarSizeMarketDataAnalysisResult == Trend.SHORT and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT):
-        log("Place Order: (Short, Short)")
+        log("Place Order: (Short, Short)", True)
         executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "SELL", 1, "MKT")
         executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "BUY", 1, "TRAIL", 20)
+
+def fourHoursBarSizeMarketDataAnalysisResultInitialization(IBClient):
+    OverSold = 20
+    OverBought = 80
+    isTrade = False
+
+    while not isinstance(IBClient.nextorderId, int):
+        pass
+
+    getCandles(IBClient, "5 D", "4 hours", "TRADES", contract("NQM2", "FUT", "GLOBEX", "USD"))
+
+    while (IBClient.historicalDataEndStatus == False):
+        pass
+
+    heikinAshiData = getHeikinAshi(IBClient.historicalDataArray, False, True)
+
+    for i in range(4, len(heikinAshiData)):
+        try:
+            openCurrent = heikinAshiData[i]["HAOpen"]
+            openOnePrevious = heikinAshiData[i - 1]["HAOpen"]
+            closeCurrent = heikinAshiData[i]["HAClose"]
+            closeOnePrevious = heikinAshiData[i - 1]["HAClose"]
+
+            # Long Trade
+            if ((closeCurrent > openCurrent) and (closeOnePrevious < openOnePrevious)):
+                if ((heikinAshiData[i]["Stochastic"] > OverSold) and (
+                        (heikinAshiData[i - 1]["Stochastic"] < OverSold) or
+                        (heikinAshiData[i - 2]["Stochastic"] < OverSold) or
+                        (heikinAshiData[i - 3]["Stochastic"] < OverSold) or
+                        (heikinAshiData[i - 4]["Stochastic"] < OverSold))):
+                    isTrade = Trend.LONG
+
+            # Short Trade
+            if ((closeCurrent < openCurrent) and (closeOnePrevious > openOnePrevious)):
+                if ((heikinAshiData[i]["Stochastic"] < OverBought) and (
+                        (heikinAshiData[i - 1]["Stochastic"] > OverBought) or
+                        (heikinAshiData[i - 2]["Stochastic"] > OverBought) or
+                        (heikinAshiData[i - 3]["Stochastic"] > OverBought) or
+                        (heikinAshiData[i - 4]["Stochastic"] > OverBought))):
+                    isTrade = Trend.SHORT
+
+        except Exception as e:
+            print(e)
+
+    return isTrade

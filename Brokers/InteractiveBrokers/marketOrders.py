@@ -17,6 +17,5 @@ def executeOrder(IBapp ,contract, action, totalQuantity, OrderType, auxPrice="")
     if OrderType == "TRAIL":
         order.auxPrice = auxPrice
         order.outsideRth = True
-    #TODO Do we need a new order id for TRAIL after MKT?
     IBapp.placeOrder(IBapp.nextorderId, contract, order)
-    IBapp.nextorderId += 1
+    IBapp.nextorderId = IBapp.nextorderId + 1

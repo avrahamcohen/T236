@@ -1,9 +1,20 @@
 #!/usr/bin/env python3
 
+import requests
 import datetime
 
-def log(msg):
+token = '5490134622:AAHU3d8mZWRon9pSqK3t7dOt9SgbFYVW7PI'
+method = 'sendMessage'
+chat_id = '-1001576496655'
+
+def log(msg, telegram=False):
     print(str(datetime.datetime.now(tz=EST5EDT()).date()) + " " + str(datetime.datetime.now(tz=EST5EDT()).time()) + ": " + msg)
+    if (telegram):
+        msg = str(datetime.datetime.now(tz=EST5EDT()).date()) + " " + str(datetime.datetime.now(tz=EST5EDT()).time()) + ": " + msg
+        requests.post(
+            url='https://api.telegram.org/bot{0}/{1}'.format(token, method),
+            data={'chat_id': chat_id, 'text': msg}
+        )
 
 def isTradeTime(begin_time, end_time):
     # If check time is not given, default to current UTC time
