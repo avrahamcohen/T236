@@ -5,7 +5,7 @@ import threading
 from Support.utils import log
 from Support.keepAlive import keepAlive
 import Brokers.InteractiveBrokers.IBClient as interactiveBrokers
-from Strategies.Futures.M_NQM2 import startStrategy as M_NQM2startStrategy
+from Strategies.Futures.NQStrategy import startStrategy as M_NQM2startStrategy
 
 IBClients = []
 IBClientsId = [100, 200]
@@ -14,7 +14,7 @@ def initialization():
     global IBClients
     global IBClientsId
 
-    log("Starting the Future Strategy for the NQM2 and MNQM2 assets.")
+    log("Starting the NQ Future Strategy.")
     time.sleep(1)
 
     IBClients.append(interactiveBrokers.IBapi())

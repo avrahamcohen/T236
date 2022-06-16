@@ -36,6 +36,7 @@ def getHeikinAshi(marketData, DEBUG=False, BACKTEST=False):
             if BACKTEST:
                 stochastic = getStochastic(len(marketData) - i - 1, marketData)
                 HAData.append({"Date": marketData[i]["Date"], "HAOpen": haOpen, "HAClose": haClose, "Stochastic": stochastic})
+                #print(marketData[i]["Date"] + " Open: " + str(marketData[i]["Open"]) + " Close: " + str(marketData[i]["Close"]))
                 #print(marketData[i]["Date"] + " HAOpen: " + str(haOpen) + " HAClose: " + str(haClose) + " Stochastic: " + str(stochastic))
 
             else:

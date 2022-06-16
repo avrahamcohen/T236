@@ -16,10 +16,13 @@ class Trend:
 fourHoursBarSizeMarketDataAnalysisResult = Trend.NA
 thirtyMinutesBarSizeMarketDataAnalysisResult = Trend.NA
 
+miniContract = "NQU2"
+microContract = "MNQU2"
+
 def clockInit():
-    #TODO Improve this.
     while (datetime.datetime.now(tz=EST5EDT()).time().microsecond > 90000):
         pass
+    log("Clock initialization.")
 
 def startStrategy(IBClient):
     global currentHour
@@ -27,10 +30,11 @@ def startStrategy(IBClient):
 
     fourHoursBarSizeMarketDataAnalysisResult = fourHoursBarSizeMarketDataAnalysisResultInitialization(IBClient)
 
-    if (fourHoursBarSizeMarketDataAnalysisResult == Trend.NA):
+    if (fourHoursBarSizeMarketDataAnalysisResult
+            == Trend.NA):
         log("Could not identified 4 hours bar size trend. Exiting.")
         exit(0)
-    log("4 Hour bar size trend set to: " + str("Long" if fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG else ("Short" if fourHoursBarSizeMarketDataAnalysisResult == Trend.SHORT else "Error")) + ".\n")
+    log("4 Hour bar size trend set to: " + str("Long" if fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG else ("Short" if fourHoursBarSizeMarketDataAnalysisResult == Trend.SHORT else "Error")) + ".")
 
     clockInit()
 
@@ -43,12 +47,12 @@ def startStrategy(IBClient):
                             ((getDay() == "Friday") and (isTradeTime(datetime.time(00, 00), datetime.time(16, 29))))):
 
                         if ((datetime.datetime.now(tz=EST5EDT()).time().hour in [2, 6, 10, 14, 18, 22]) and (datetime.datetime.now(tz=EST5EDT()).time().minute == 0)):
-                            time.sleep(1)
+                            #time.sleep(1)
                             analyzeFourHoursBarSizeHistoricalData(IBClient)
 
                         if ((datetime.datetime.now(tz=EST5EDT()).time().minute in [0, 30])):
                             if currentMinute != datetime.datetime.now(tz=EST5EDT()).time().minute:
-                                time.sleep(1)
+                                #time.sleep(1)
                                 analyzeThirtyMinutesBarSizeHistoricalData(IBClient)
                                 stateMachine(IBClient, True)
                                 currentMinute = datetime.datetime.now(tz=EST5EDT()).time().minute
@@ -81,7 +85,7 @@ def analyzeHistoricalData(marketData, barSize, DEBUG=False):
     OverBought = 80
 
     try:
-        heikinAshiData = getHeikinAshi(marketData, False, False)
+        heikinAshiData = getHeikinAshi(marketData, False, True)
         position = len(heikinAshiData) - 1
         openCurrent = heikinAshiData[position]["HAOpen"]
         openOnePrevious = heikinAshiData[position - 1]["HAOpen"]
@@ -89,7 +93,10 @@ def analyzeHistoricalData(marketData, barSize, DEBUG=False):
         closeOnePrevious = heikinAshiData[position - 1]["HAClose"]
 
         if DEBUG:
-            log(" HAOpen:" + str(openCurrent) + " , HAClose:" + str(closeCurrent) + " , Stochastic:" + (str(getStochastic(0, marketData))) + ".")
+            log("Open: " + str(marketData[position]["Open"]) + " Close: " + str(marketData[position]["Close"]) +
+                " HAOpen: " + str(openCurrent) + " HAClose: " + str(closeCurrent) +
+                " PHAOpen: " + str(openOnePrevious) + " PHAClose: " + str(closeOnePrevious) +" Stochastic: " + (
+                    str(getStochastic(0, marketData))) + " : Bar Close Values", True)
 
         # Long Trade
         if ((closeCurrent > openCurrent) and (closeOnePrevious < openOnePrevious)):
@@ -117,13 +124,13 @@ def analyzeHistoricalData(marketData, barSize, DEBUG=False):
         print(e)
 
 def analyzeFourHoursBarSizeHistoricalData(IBClient):
+    global miniContract
     global currentHour
     global fourHoursBarSizeMarketDataAnalysisResult
 
     if currentHour != datetime.datetime.now(tz=EST5EDT()).time().hour:
         fourHoursBarSizeMarketData = []
-        log("Analyze Four Hours Market.")
-        getCandles(IBClient, "5 D", "4 hours", "TRADES", contract("NQM2", "FUT", "GLOBEX", "USD"))
+        getCandles(IBClient, "5 D", "4 hours", "TRADES", contract(miniContract, "FUT", "GLOBEX", "USD"))
         while (IBClient.historicalDataEndStatus == False):
             pass
         fourHoursBarSizeMarketData = IBClient.historicalDataArray
@@ -131,25 +138,25 @@ def analyzeFourHoursBarSizeHistoricalData(IBClient):
         IBClient.historicalDataArray = []
         IBClient.historicalDataEndStatus = False
         currentHour = datetime.datetime.now(tz=EST5EDT()).time().hour
-        log("Analyze Four Hours Market End.")
 
 def analyzeThirtyMinutesBarSizeHistoricalData(IBClient):
+    global miniContract
     global currentMinute
     global thirtyMinutesBarSizeMarketDataAnalysisResult
 
     thirtyMinutesBarSizeMarketData = []
     thirtyMinutesBarSizeMarketDataAnalysisResult = Trend.NA
-    log("Analyze Thirty Minutes Market.")
-    getCandles(IBClient, "3 D", "30 mins", "TRADES", contract("NQM2", "FUT", "GLOBEX", "USD"))
+    getCandles(IBClient, "3 D", "30 mins", "TRADES", contract(miniContract, "FUT", "GLOBEX", "USD"))
     while (IBClient.historicalDataEndStatus == False):
         pass
     thirtyMinutesBarSizeMarketData = IBClient.historicalDataArray
     thirtyMinutesBarSizeMarketDataAnalysisResult = analyzeHistoricalData(thirtyMinutesBarSizeMarketData, 30, True)
     IBClient.historicalDataArray = []
     IBClient.historicalDataEndStatus = False
-    log("Analyze Thirty Minutes Market End.")
 
 def stateMachine(IBClient, DEBUG=False):
+    global miniContract
+    global microContract
     global fourHoursBarSizeMarketDataAnalysisResult
     global thirtyMinutesBarSizeMarketDataAnalysisResult
 
@@ -165,22 +172,23 @@ def stateMachine(IBClient, DEBUG=False):
 
     if (fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG):
         log("Place Order: (Long, Long)", True)
-        executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "BUY", 1, "MKT")
-        executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "SELL", 1, "TRAIL", 20)
+        executeOrder(IBClient, contract(miniContract, "FUT", "GLOBEX", "USD"), "BUY", 1, "MKT")
+        executeOrder(IBClient, contract(miniContract, "FUT", "GLOBEX", "USD"), "SELL", 1, "TRAIL", 20)
     elif (fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT):
         log("Place Order: (Long, Short)", True)
-        executeOrder(IBClient, contract("MNQM2", "FUT", "GLOBEX", "USD"), "SELL", 4, "MKT")
-        executeOrder(IBClient, contract("MNQM2", "FUT", "GLOBEX", "USD"), "BUY", 4, "TRAIL", 20)
+        executeOrder(IBClient, contract(microContract, "FUT", "GLOBEX", "USD"), "SELL", 4, "MKT")
+        executeOrder(IBClient, contract(microContract, "FUT", "GLOBEX", "USD"), "BUY", 4, "TRAIL", 20)
     elif (fourHoursBarSizeMarketDataAnalysisResult == Trend.SHORT and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG):
         log("Place Order: (Short, Long)", True)
-        executeOrder(IBClient, contract("MNQM2", "FUT", "GLOBEX", "USD"), "BUY", 4, "MKT")
-        executeOrder(IBClient, contract("MNQM2", "FUT", "GLOBEX", "USD"), "SELL", 4, "TRAIL", 20)
+        executeOrder(IBClient, contract(microContract, "FUT", "GLOBEX", "USD"), "BUY", 4, "MKT")
+        executeOrder(IBClient, contract(microContract, "FUT", "GLOBEX", "USD"), "SELL", 4, "TRAIL", 20)
     elif (fourHoursBarSizeMarketDataAnalysisResult == Trend.SHORT and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT):
         log("Place Order: (Short, Short)", True)
-        executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "SELL", 1, "MKT")
-        executeOrder(IBClient, contract("NQM2", "FUT", "GLOBEX", "USD"), "BUY", 1, "TRAIL", 20)
+        executeOrder(IBClient, contract(miniContract, "FUT", "GLOBEX", "USD"), "SELL", 1, "MKT")
+        executeOrder(IBClient, contract(miniContract, "FUT", "GLOBEX", "USD"), "BUY", 1, "TRAIL", 20)
 
 def fourHoursBarSizeMarketDataAnalysisResultInitialization(IBClient):
+    global miniContract
     OverSold = 20
     OverBought = 80
     isTrade = False
@@ -188,7 +196,7 @@ def fourHoursBarSizeMarketDataAnalysisResultInitialization(IBClient):
     while not isinstance(IBClient.nextorderId, int):
         pass
 
-    getCandles(IBClient, "5 D", "4 hours", "TRADES", contract("NQM2", "FUT", "GLOBEX", "USD"))
+    getCandles(IBClient, "5 D", "4 hours", "TRADES", contract(miniContract, "FUT", "GLOBEX", "USD"))
 
     while (IBClient.historicalDataEndStatus == False):
         pass
@@ -223,4 +231,6 @@ def fourHoursBarSizeMarketDataAnalysisResultInitialization(IBClient):
         except Exception as e:
             print(e)
 
+    IBClient.historicalDataArray = []
+    IBClient.historicalDataEndStatus = False
     return isTrade
