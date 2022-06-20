@@ -9,9 +9,9 @@ currentHour = -1
 currentMinute = -1
 
 class Trend:
-    SHORT = 1
-    LONG = 2
-    NA = 3
+    SHORT = "Short"
+    LONG = "Long"
+    NA = "None"
 
 fourHoursBarSizeMarketDataAnalysisResult = Trend.NA
 thirtyMinutesBarSizeMarketDataAnalysisResult = Trend.NA
@@ -27,14 +27,14 @@ def clockInit():
 def startStrategy(IBClient):
     global currentHour
     global currentMinute
+    global fourHoursBarSizeMarketDataAnalysisResult
 
     fourHoursBarSizeMarketDataAnalysisResult = fourHoursBarSizeMarketDataAnalysisResultInitialization(IBClient)
 
-    if (fourHoursBarSizeMarketDataAnalysisResult
-            == Trend.NA):
+    if (fourHoursBarSizeMarketDataAnalysisResult == "None"):
         log("Could not identified 4 hours bar size trend. Exiting.")
         exit(0)
-    log("4 Hour bar size trend set to: " + str("Long" if fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG else ("Short" if fourHoursBarSizeMarketDataAnalysisResult == Trend.SHORT else "Error")) + ".")
+    log("4 Hour bar size trend set to: " + str(fourHoursBarSizeMarketDataAnalysisResult))
 
     clockInit()
 
@@ -81,6 +81,7 @@ def closeAllPositions(IBClient):
     IBClient.openPositionDataEndStatus = False
 
 def analyzeHistoricalData(marketData, barSize, DEBUG=False):
+    global fourHoursBarSizeMarketDataAnalysisResult
     OverSold = 20
     OverBought = 80
 
@@ -118,6 +119,7 @@ def analyzeHistoricalData(marketData, barSize, DEBUG=False):
 
         if barSize == 4:
             return fourHoursBarSizeMarketDataAnalysisResult
+
         return Trend.NA
     
     except Exception as e:
@@ -163,13 +165,13 @@ def stateMachine(IBClient, DEBUG=False):
     try:
         with open('orders.txt', 'a') as orders:
             orders.write(str(datetime.datetime.now(tz=EST5EDT()).date()) + " " + str(datetime.datetime.now(tz=EST5EDT()).time()) + ": " + "Place Order: (" + 
-                    str("Long" if fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG else "Short") + " , " + 
-                    str("Long" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG else ("Short" if thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.SHORT else "No Entry")) + ").\n")
+                    str(fourHoursBarSizeMarketDataAnalysisResult) + " , " + str(thirtyMinutesBarSizeMarketDataAnalysisResult) + ").\n")
 
     except:
         log("Log Error (StateMachine)")
         pass
 
+    log("Placing Order: " + str(fourHoursBarSizeMarketDataAnalysisResult) + ", " + str(thirtyMinutesBarSizeMarketDataAnalysisResult))
     if (fourHoursBarSizeMarketDataAnalysisResult == Trend.LONG and thirtyMinutesBarSizeMarketDataAnalysisResult == Trend.LONG):
         log("Place Order: (Long, Long)", True)
         executeOrder(IBClient, contract(miniContract, "FUT", "GLOBEX", "USD"), "BUY", 1, "MKT")

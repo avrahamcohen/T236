@@ -19,4 +19,4 @@ def keepAlive(IBClient):
             #IBClient.clientID = IBClient.clientID + 1
             #if (IBClient.clientID > 998):
             #    IBClient.clientID = 100
-            log("Reconnecting... " + str(IBClient.clientID), True)
+            #log("Reconnecting... " + str(IBClient.clientID), True)
